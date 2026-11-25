@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LaunchScout Solution Guide</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1d2330; --muted: #5d6677; --line: #b9c0cc; --panel: #ffffff;
+    --accent: #0b6e4f; --accent-bg: #e3f3ec; --warn: #a4501c; --warn-bg: #fbeee3; --code-bg: #eef0f4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171d; --fg: #e8eaf0; --muted: #9aa3b5; --line: #4a5365; --panel: #1c212b;
+      --accent: #5fd1a4; --accent-bg: #173328; --warn: #f0a46d; --warn-bg: #3a2a1d; --code-bg: #232937;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171d; --fg: #e8eaf0; --muted: #9aa3b5; --line: #4a5365; --panel: #1c212b;
+    --accent: #5fd1a4; --accent-bg: #173328; --warn: #f0a46d; --warn-bg: #3a2a1d; --code-bg: #232937;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 16px 80px; }
+  header.hero { padding: 24px 0 8px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 1.45rem; margin: 48px 0 12px; padding-top: 8px; border-top: 1px solid var(--line); line-height: 1.3; }
+  h3 { font-size: 1.1rem; margin: 28px 0 8px; }
+  p { margin: 0 0 14px; }
+  .lead { font-size: 1.1rem; color: var(--muted); max-width: 70ch; }
+  a { color: var(--accent); }
+  code, pre { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: .9em; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--code-bg); padding: 12px 14px; border-radius: 8px; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  nav.toc { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin: 18px 0 8px; }
+  nav.toc ol { margin: 6px 0 0; padding-left: 22px; columns: 2; column-gap: 28px; }
+  nav.toc li { margin: 2px 0; break-inside: avoid; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 20px; font-size: .94rem; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  .tablewrap { overflow-x: auto; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 16px 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .card b { display: block; font-size: 1.25rem; color: var(--accent); }
+  .step { display: grid; grid-template-columns: 38px 1fr; gap: 12px; margin: 22px 0; }
+  .num { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: var(--bg); font-weight: 700;
+         display: flex; align-items: center; justify-content: center; }
+  .step h3 { margin-top: 4px; }
+  .note { background: var(--accent-bg); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; margin: 14px 0; }
+  .caution { background: var(--warn-bg); border-left: 4px solid var(--warn); padding: 10px 14px; border-radius: 6px; margin: 14px 0; }
+  .tag { display: inline-block; font-size: .78rem; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+  .tag.opt { border-style: dashed; }
+  figure { margin: 18px 0 26px; }
+  figure .scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  figure svg { display: block; width: 100%; min-width: 640px; height: auto; max-width: 100%; color: var(--fg); }
+  figcaption { color: var(--muted); font-size: .92rem; margin-top: 8px; max-width: 80ch; }
+  /* diagram vocabulary (classes live here, not inside the SVG) */
+  svg .b  { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; }
+  svg .a  { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 1.8; }
+  svg .w  { fill: var(--warn-bg); stroke: var(--warn); stroke-width: 1.8; }
+  svg .d  { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 6 4; }
+  svg .l  { stroke: currentColor; stroke-width: 1.5; fill: none; }
+  svg .ld { stroke: currentColor; stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
+  svg .la { stroke: var(--accent); stroke-width: 2; fill: none; }
+  svg .lw { stroke: var(--warn); stroke-width: 2; fill: none; }
+  svg text { fill: currentColor; font-size: 12.5px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  svg .t  { text-anchor: middle; }
+  svg .tl { text-anchor: start; }
+  svg .tr { text-anchor: end; }
+  svg .s  { font-size: 11px; fill: var(--muted); }
+  svg .h  { font-weight: 700; }
+  svg .ta { fill: var(--accent); font-weight: 700; }
+  svg .tw { fill: var(--warn); font-weight: 700; }
+  footer { margin-top: 56px; color: var(--muted); font-size: .9rem; border-top: 1px solid var(--line); padding-top: 14px; }
+  @media (max-width: 640px) { nav.toc ol { columns: 1; } h1 { font-size: 1.6rem; } .step { grid-template-columns: 30px 1fr; } }
+  @media print { figure .scroll { overflow: visible; } figure svg { min-width: 0; } .toc { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <span class="tag">Final assignment · ReviewLens</span>
+  <h1>LaunchScout: Competitor Research Crew</h1>
+  <p class="lead">A complete walk-through of the solution: what was asked, how the four agents work together, how every
+  price is checked against its source, how a run is scored and tracked, and what the results honestly show.</p>
+  <div class="cards">
+    <div class="card"><b>4 agents</b>Market Researcher, Review Analyst, Strategy Analyst, Report Writer, run in sequence.</div>
+    <div class="card"><b>2 guardrails</b>Reject unverified prices and inconsistent reports, then send the agent back with specific fixes.</div>
+    <div class="card"><b>3 stretch goals</b>Pitch-deck agent, hierarchical Manager mode, weekly re-runs with price tracking.</div>
+    <div class="card"><b>1 form, any idea</b>Works for any business idea and city with no code changes.</div>
+  </div>
+  <nav class="toc" aria-label="Contents">
+    <strong>Contents</strong>
+    <ol>
+      <li><a href="#brief">The assignment</a></li>
+      <li><a href="#overview">Solution at a glance</a></li>
+      <li><a href="#steps">A run, step by step</a></li>
+      <li><a href="#pipeline">The agent pipeline</a></li>
+      <li><a href="#guardrails">Guardrails: the retry loop</a></li>
+      <li><a href="#verify">How a price gets verified</a></li>
+      <li><a href="#checks">The quality checks</a></li>
+      <li><a href="#score">The quality score</a></li>
+      <li><a href="#extras">Stretch goals</a></li>
+      <li><a href="#app">The Streamlit app</a></li>
+      <li><a href="#files">Files and outputs</a></li>
+      <li><a href="#results">Results and honest limits</a></li>
+      <li><a href="#checklist">Done checklist</a></li>
+      <li><a href="#run">How to run it</a></li>
+    </ol>
+  </nav>
+</header>
+
+<!-- ============================================================ 1 -->
+<section id="brief">
+  <h2>1. The assignment</h2>
+  <p>The brief (<code>LaunchScout_CRC.md</code>) asks for a team of AI agents that researches the market for a new business
+  idea and delivers a competitor report with prices, gaps and a launch plan.</p>
+  <ul>
+    <li><strong>Four CrewAI agents</strong> in a sequential process: Market Researcher, Review Analyst, Strategy Analyst, Report Writer.</li>
+    <li><strong>A Streamlit app</strong> with an input form (idea, city, target customer, optional known competitors), a live view of
+        which agent is working, and Markdown / PDF download.</li>
+    <li><strong>A six-section report</strong> with sourced claims, saved to <code>report.md</code>, working for any idea and city.</li>
+    <li><strong>Stretch goals:</strong> a hierarchical Manager agent, a Pitch Deck agent (6 slides) and weekly re-runs that highlight price changes.</li>
+  </ul>
+  <div class="note"><strong>The main design decision.</strong> A language model will happily write a convincing price it never saw.
+  A competitor report with invented prices is worse than no report. So the solution does not ask the model to <em>find</em> facts. It gives the
+  agents a tool that returns real quotes from real pages, then <em>re-checks</em> each quote against the page and sends the agent back when it
+  cannot be confirmed.</div>
+</section>
+
+<!-- ============================================================ 2 -->
+<section id="overview">
+  <h2>2. Solution at a glance</h2>
+  <p>Everything runs through one function, <code>run_crew()</code> in <code>crew.py</code>. The web app and the command-line script
+  both call it, so a scheduled weekly run behaves exactly like a click in the browser.</p>
+
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 760 372" role="img" aria-label="System overview: the form and the weekly script both call run_crew, which uses Serper, web pages and an LLM and writes the output folder that the app reads back.">
+      <defs><marker id="mA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+
+      <rect class="b" x="10" y="30" width="140" height="56" rx="8"/>
+      <text class="t h" x="80" y="55">Input form</text><text class="t s" x="80" y="72">idea · city · customer</text>
+
+      <rect class="a" x="10" y="140" width="140" height="80" rx="8"/>
+      <text class="t h" x="80" y="168">app.py</text><text class="t" x="80" y="185">Streamlit app</text><text class="t s" x="80" y="202">live agent badges</text>
+
+      <rect class="d" x="10" y="280" width="140" height="56" rx="8"/>
+      <text class="t h" x="80" y="305">weekly_rerun.py</text><text class="t s" x="80" y="322">command line</text>
+
+      <rect class="b" x="240" y="30" width="250" height="306" rx="10"/>
+      <text class="t h" x="365" y="56">crew.py · run_crew()</text>
+      <text class="tl s" x="258" y="90">0</text><text class="tl" x="276" y="90">check web search works</text>
+      <text class="tl s" x="258" y="122">1</text><text class="tl" x="276" y="122">Market Researcher</text>
+      <text class="tl s" x="258" y="154">2</text><text class="tl" x="276" y="154">Review Analyst</text>
+      <text class="tl s" x="258" y="186">3</text><text class="tl" x="276" y="186">Strategy Analyst</text>
+      <text class="tl s" x="258" y="218">4</text><text class="tl" x="276" y="218">Report Writer</text>
+      <text class="tl s" x="258" y="250">5</text><text class="tl" x="276" y="250">Pitch Deck Designer (optional)</text>
+      <text class="tl s" x="258" y="282">6</text><text class="tl" x="276" y="282">final checks · score · archive</text>
+      <text class="tl ta" x="258" y="314">→ report.md saved</text>
+
+      <rect class="b" x="600" y="30" width="150" height="56" rx="8"/>
+      <text class="t h" x="675" y="55">Serper</text><text class="t s" x="675" y="72">Google search</text>
+      <rect class="b" x="600" y="110" width="150" height="56" rx="8"/>
+      <text class="t h" x="675" y="135">Web pages</text><text class="t s" x="675" y="152">scraped, price lines</text>
+      <rect class="b" x="600" y="190" width="150" height="56" rx="8"/>
+      <text class="t h" x="675" y="215">LLM</text><text class="t s" x="675" y="232">OpenAI model</text>
+      <rect class="a" x="600" y="280" width="150" height="56" rx="8"/>
+      <text class="t h" x="675" y="305">output/</text><text class="t s" x="675" y="322">report · deck · score</text>
+
+      <line class="l" x1="80" y1="86" x2="80" y2="138" marker-end="url(#mA)"/><text class="tl s" x="88" y="118">submit</text>
+      <line class="l" x1="150" y1="180" x2="238" y2="180" marker-end="url(#mA)"/><text class="t s" x="194" y="172">run_crew()</text>
+      <line class="ld" x1="150" y1="308" x2="238" y2="308" marker-end="url(#mA)"/><text class="t s" x="194" y="300">same call</text>
+      <line class="l" x1="490" y1="58" x2="598" y2="58" marker-end="url(#mA)"/><text class="t s" x="544" y="50">search</text>
+      <line class="l" x1="490" y1="138" x2="598" y2="138" marker-end="url(#mA)"/><text class="t s" x="544" y="130">fetch</text>
+      <line class="l" x1="490" y1="218" x2="598" y2="218" marker-end="url(#mA)"/><text class="t s" x="544" y="210">prompts</text>
+      <line class="la" x1="490" y1="308" x2="598" y2="308" marker-end="url(#mA)"/><text class="t s" x="544" y="300">writes</text>
+      <polyline class="l" points="675,336 675,360 80,360 80,222" marker-end="url(#mA)"/>
+      <text class="t s" x="378" y="353">tabs and downloads read the saved files</text>
+    </svg>
+    </div>
+    <figcaption>The browser form and the scheduled script are two doors into the same <code>run_crew()</code>. The crew reaches the
+    outside world through three services and leaves everything it produces in <code>output/</code>, which the app reads back for its tabs and downloads.</figcaption>
+  </figure>
+
+  <h3>Technology used</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Part</th><th>Choice</th><th>Why</th></tr>
+    <tr><td>Agent framework</td><td>CrewAI (<code>Agent</code>, <code>Task</code>, <code>Crew</code>, guardrails)</td><td>Required by the brief; tasks pass their output on through <code>context</code>.</td></tr>
+    <tr><td>Web search</td><td>Serper (<code>SerperDevTool</code>)</td><td>Google results through a simple API.</td></tr>
+    <tr><td>Page reading</td><td><code>ScrapeWebsiteTool</code> and a custom <code>PriceFinderTool</code></td><td>The custom tool returns real price quotes so prices are copied, not invented.</td></tr>
+    <tr><td>Language model</td><td>Any LiteLLM model string from <code>.env</code> (tested with <code>openai/gpt-4o</code>)</td><td>Swapping the model needs no code change.</td></tr>
+    <tr><td>UI</td><td>Streamlit</td><td>A form, live status and download buttons in under 250 lines.</td></tr>
+    <tr><td>Exports</td><td><code>markdown</code> + <code>xhtml2pdf</code> (PDF), <code>python-pptx</code> (deck)</td><td>Report and deck as files a founder can send.</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ 3 -->
+<section id="steps">
+  <h2>3. A run, step by step</h2>
+  <p>What happens, in order, when someone presses <em>Run research crew</em> (or starts <code>weekly_rerun.py</code>).</p>
+
+  <div class="step"><div class="num">1</div><div>
+    <h3>The inputs are collected</h3>
+    <p>The form holds the business <strong>idea</strong>, the <strong>city</strong>, the <strong>target customer</strong> and optional
+    <strong>known competitors</strong>, plus three options: a pitch deck, the number of runs (1 to 3) and hierarchical mode. Because the
+    inputs are just text, the same code serves any idea in any city. Missing required fields stop the run before any credits are spent.</p>
+  </div></div>
+
+  <div class="step"><div class="num">2</div><div>
+    <h3>The app starts the crew in a background thread</h3>
+    <p>Streamlit reruns the whole page on every interaction and the crew takes minutes, so the crew runs in a worker thread. The
+    agents' callbacks push short messages into a queue. The page loop reads the queue every half second, ticks the badge of the agent that
+    just finished and repaints the last 25 log lines. That is how the page can show <em>which agent is working right now</em>.</p>
+  </div></div>
+
+  <div class="step"><div class="num">3</div><div>
+    <h3>A pre-flight check proves search works</h3>
+    <p><code>check_search()</code> sends one test query to Serper. An invalid key or an empty account would otherwise let the agents carry on
+    <em>without sources</em> and invent data. That actually happened early in development, so the run now stops with a clear error instead.</p>
+  </div></div>
+
+  <div class="step"><div class="num">4</div><div>
+    <h3>Agent 1: the Market Researcher finds competitors and prices</h3>
+    <p>It searches, scrapes pages and calls <code>price_finder</code> for every competitor. The tool fetches the competitor's page (or Google
+    snippets of it when the page needs JavaScript) and returns lines such as
+    <code>EVIDENCE | Millet Express | https://… | "Millet Roti with Kadai Veg Curry … 279"</code>. The agent must copy one such line per price. Its output is a
+    table: competitor, Direct or adjacent, location confirmed, price with unit, monthly plan, offers, channel, contact and source URL.</p>
+    <p>Guardrail 1 then checks the table (see <a href="#guardrails">section 5</a>) and can send the agent back up to three times.</p>
+  </div></div>
+
+  <div class="step"><div class="num">5</div><div>
+    <h3>Agent 2: the Review Analyst finds what customers say</h3>
+    <p>For each competitor it searches for third-party reviews (Google Maps, Zomato, Swiggy, Justdial, Reddit, blogs). Every like or complaint
+    needs a short quote, the exact review URL, the review count and the rating, or the line <em>No third-party reviews found</em>. It is told never to
+    infer a complaint.</p>
+  </div></div>
+
+  <div class="step"><div class="num">6</div><div>
+    <h3>Agent 3: the Strategy Analyst builds the plan</h3>
+    <p>It has no tools on purpose, so it can only reason from what it was handed. It builds the comparison matrix, picks the <em>one</em> biggest
+    market gap and proposes a positioning with a price. The price must be derived from the competitors' <strong>verified</strong> prices: list them,
+    show the lowest, highest and median, and state the rule. Unverified prices are excluded and the reason given.</p>
+  </div></div>
+
+  <div class="step"><div class="num">7</div><div>
+    <h3>Agent 4: the Report Writer assembles the report</h3>
+    <p>It writes the six sections, numbers the sources and adds a week-by-week 30-day launch plan. Guardrail 2 checks consistency, such as arithmetic,
+    wording, and whether the cited sources are real. The writer can be sent back up to three times.</p>
+  </div></div>
+
+  <div class="step"><div class="num">8</div><div>
+    <h3>Optional: the Pitch Deck Designer makes 6 slides <span class="tag opt">optional</span></h3>
+    <p>A fifth agent turns the <em>finished report</em> into exactly six slides without adding facts or numbers (see <a href="#extras">section 9</a>).</p>
+  </div></div>
+
+  <div class="step"><div class="num">9</div><div>
+    <h3>The program finishes the job itself</h3>
+    <p>After the agents stop, <code>run_crew()</code> does the things that should not depend on a model's mood:</p>
+    <ul>
+      <li>saves the report to <code>output/report.md</code> (it does not trust the agent's own file write);</li>
+      <li>refuses a report with fewer than 3 real source URLs rather than showing it as if it were sourced;</li>
+      <li>runs every check one last time and writes anything still wrong to <code>report_warnings.txt</code>;</li>
+      <li>saves a price snapshot and, when an earlier run exists, writes <code>changes.md</code>;</li>
+      <li>scores the run and copies all its files to <code>output/runs/&lt;idea&gt;__&lt;timestamp&gt;/</code>.</li>
+    </ul>
+  </div></div>
+
+  <div class="step"><div class="num">10</div><div>
+    <h3>The app shows the result</h3>
+    <p>The tabs are Report (with quality warnings and Markdown / PDF download), Changes since last run, Quality score and, when requested, Pitch deck
+    (with a PowerPoint download). When the page is opened without running anything it shows the last saved run, so downloads work without spending credits.</p>
+  </div></div>
+</section>
+
+<!-- ============================================================ 4 -->
+<section id="pipeline">
+  <h2>4. The agent pipeline</h2>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 880 300" role="img" aria-label="Four agents in sequence with guardrails on the researcher, the writer and the optional deck designer; each guardrail either passes the answer on or sends feedback back.">
+      <defs><marker id="mB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+
+      <text class="t s" x="75" y="30">search · scrape · price_finder</text>
+      <text class="t s" x="257" y="30">search · scrape</text>
+      <text class="t s" x="439" y="30">no tools</text>
+      <text class="t s" x="621" y="30">file writer</text>
+
+      <rect class="b" x="10" y="40" width="130" height="64" rx="8"/><text class="t h" x="75" y="68">1 Market</text><text class="t h" x="75" y="86">Researcher</text>
+      <rect class="b" x="192" y="40" width="130" height="64" rx="8"/><text class="t h" x="257" y="68">2 Review</text><text class="t h" x="257" y="86">Analyst</text>
+      <rect class="b" x="374" y="40" width="130" height="64" rx="8"/><text class="t h" x="439" y="68">3 Strategy</text><text class="t h" x="439" y="86">Analyst</text>
+      <rect class="b" x="556" y="40" width="130" height="64" rx="8"/><text class="t h" x="621" y="68">4 Report</text><text class="t h" x="621" y="86">Writer</text>
+      <rect class="d" x="738" y="40" width="130" height="64" rx="8"/><text class="t h" x="803" y="68">5 Pitch Deck</text><text class="t h" x="803" y="86">Designer</text>
+
+      <line class="l" x1="140" y1="72" x2="190" y2="72" marker-end="url(#mB)"/><text class="t s" x="165" y="64">table</text>
+      <line class="l" x1="322" y1="72" x2="372" y2="72" marker-end="url(#mB)"/><text class="t s" x="347" y="64">reviews</text>
+      <line class="l" x1="504" y1="72" x2="554" y2="72" marker-end="url(#mB)"/><text class="t s" x="529" y="64">gap</text>
+      <line class="ld" x1="686" y1="72" x2="736" y2="72" marker-end="url(#mB)"/><text class="t s" x="711" y="64">report</text>
+
+      <rect class="w" x="10" y="170" width="130" height="62" rx="8"/>
+      <text class="t h" x="75" y="192">Guardrail 1</text><text class="t s" x="75" y="208">3+ competitors, prices</text><text class="t s" x="75" y="222">verified on their pages</text>
+      <rect class="w" x="556" y="170" width="130" height="62" rx="8"/>
+      <text class="t h" x="621" y="192">Guardrail 2</text><text class="t s" x="621" y="208">6 sections, sources,</text><text class="t s" x="621" y="222">no unsupported claims</text>
+      <rect class="w" x="738" y="170" width="130" height="62" rx="8" style="stroke-dasharray:6 4"/>
+      <text class="t h" x="803" y="192">Guardrail 3</text><text class="t s" x="803" y="208">6 slides, numbers</text><text class="t s" x="803" y="222">must be in the report</text>
+
+      <line class="l" x1="45" y1="104" x2="45" y2="168" marker-end="url(#mB)"/><text class="tl s" x="51" y="140">answer</text>
+      <line class="lw" x1="105" y1="168" x2="105" y2="106" marker-end="url(#mB)"/><text class="tl s" x="111" y="152">feedback</text>
+      <line class="l" x1="591" y1="104" x2="591" y2="168" marker-end="url(#mB)"/><text class="tl s" x="560" y="140" style="text-anchor:end">answer</text>
+      <line class="lw" x1="651" y1="168" x2="651" y2="106" marker-end="url(#mB)"/><text class="tl s" x="657" y="152">feedback</text>
+      <line class="l" x1="773" y1="104" x2="773" y2="168" marker-end="url(#mB)"/>
+      <line class="lw" x1="833" y1="168" x2="833" y2="106" marker-end="url(#mB)"/>
+
+      <text class="t s" x="440" y="270">Each agent's output is also passed on as context to every later task that lists it, so the Report Writer sees the research, reviews and strategy.</text>
+    </svg>
+    </div>
+    <figcaption>Agents run left to right. Guardrails sit on the three outputs where a mistake would be most costly: the research table
+    (invented prices), the report (inconsistent or unsupported claims) and the deck (numbers that are not in the report).</figcaption>
+  </figure>
+
+  <div class="tablewrap"><table>
+    <tr><th>Agent</th><th>Tools</th><th>Produces</th><th>Why designed this way</th></tr>
+    <tr><td>Market Researcher</td><td>search, scrape, <code>price_finder</code></td><td>Competitor table plus EVIDENCE lines</td><td>The price tool removes the temptation to invent prices.</td></tr>
+    <tr><td>Review Analyst</td><td>search, scrape</td><td>Likes and complaints with quote, review URL, count and rating</td><td>Only third-party pages count; the competitor's own site is not a valid source of complaints.</td></tr>
+    <tr><td>Strategy Analyst</td><td>none</td><td>Matrix, one market gap, priced positioning</td><td>No tools means it cannot add facts; it can only reason from the evidence.</td></tr>
+    <tr><td>Report Writer</td><td>file writer</td><td>Six-section report</td><td>Packaging, not research; the program saves the final text itself.</td></tr>
+    <tr><td>Pitch Deck Designer <span class="tag opt">optional</span></td><td>none</td><td>6 slides</td><td>Built only from the finished report so slides cannot outrun the evidence.</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ 5 -->
+<section id="guardrails">
+  <h2>5. Guardrails: the retry loop</h2>
+  <p>A <strong>guardrail</strong> is a function CrewAI runs on an agent's answer. It returns "accept" or "reject, and here is what is wrong". A rejection
+  becomes the next instruction the agent receives, so the agent corrects specific mistakes rather than starting again blind.</p>
+
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 760 240" role="img" aria-label="An agent's answer goes to a guardrail. If every check passes it is accepted. If it fails on tries one or two the problems go back to the agent as feedback. If it still fails on try three it is accepted anyway and the problems are recorded.">
+      <defs><marker id="mC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+
+      <rect class="b" x="10" y="85" width="120" height="60" rx="8"/><text class="t h" x="70" y="112">Agent</text><text class="t s" x="70" y="130">writes an answer</text>
+      <rect class="w" x="210" y="85" width="150" height="60" rx="8"/><text class="t h" x="285" y="112">Guardrail</text><text class="t s" x="285" y="130">checks from verify.py</text>
+      <line class="l" x1="130" y1="115" x2="208" y2="115" marker-end="url(#mC)"/><text class="t s" x="169" y="107">answer</text>
+
+      <rect class="a" x="450" y="15" width="290" height="56" rx="8"/><text class="t h" x="595" y="41">Accepted → next task</text><text class="t s" x="595" y="58">its output becomes the next agent's context</text>
+      <rect class="w" x="450" y="165" width="290" height="56" rx="8"/><text class="t h" x="595" y="191">Accepted anyway after try 3</text><text class="t s" x="595" y="208">problems saved: NOTE, warnings file, lower score</text>
+
+      <polyline class="la" points="360,100 405,100 405,43 448,43" marker-end="url(#mC)"/><text class="tr s" x="398" y="72">all checks pass</text>
+      <polyline class="lw" points="360,130 405,130 405,193 448,193" marker-end="url(#mC)"/><text class="tr s" x="398" y="168">still failing on try 3</text>
+      <polyline class="lw" points="285,145 285,205 70,205 70,147" marker-end="url(#mC)"/><text class="t s" x="178" y="198">fail (try 1 or 2): list of fixes</text>
+    </svg>
+    </div>
+    <figcaption>The loop is bounded: at most three tries per task. Running out of tries never blocks the run, but nothing is hidden. Whatever is
+    still wrong is recorded, shown above the report in the app and subtracted from the quality score.</figcaption>
+  </figure>
+
+  <h3>What the feedback looks like</h3>
+  <pre><code>Report rejected: page for a different city than Coimbatore: https://www.zomato.com/hyderabad/millet-express-kondapur/reviews;
+section 2 complaint has no real source link ...; Return the COMPLETE corrected report Markdown.</code></pre>
+  <p>Every message names the problem and the fix, because a model fixes "remove the Dharthi Foods row: it is priced per 250 g" far more reliably than "try again".</p>
+</section>
+
+<!-- ============================================================ 6 -->
+<section id="verify">
+  <h2>6. How a price gets verified</h2>
+  <p>Every numeric price in the table must be backed by an <code>EVIDENCE</code> line: the competitor, the URL and a verbatim quote that contains the price.
+  <code>verify_research()</code> then walks each price through the decisions below and assigns one status.</p>
+
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 820 392" role="img" aria-label="Decision chain for one price: no evidence line or price not in its quote gives unsupported; an unreadable page falls back to Google snippets giving verified-snippet or unverifiable; a readable page gives verified, verified-approx or mismatch.">
+      <defs><marker id="mD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+
+      <rect class="b" x="10"  y="10"  width="300" height="44" rx="8"/><text class="t" x="160" y="37">EVIDENCE line for this competitor?</text>
+      <rect class="b" x="10"  y="78"  width="300" height="44" rx="8"/><text class="t" x="160" y="105">Table price figure appears in the quote?</text>
+      <rect class="b" x="10"  y="146" width="300" height="44" rx="8"/><text class="t" x="160" y="173">Page readable (HTTP 200, real text)?</text>
+      <rect class="b" x="10"  y="214" width="300" height="44" rx="8"/><text class="t" x="160" y="241">Exact quote found on the page?</text>
+      <rect class="b" x="10"  y="282" width="300" height="44" rx="8"/><text class="t" x="160" y="302">80%+ of the quote's words and</text><text class="t" x="160" y="318">every price figure on the page?</text>
+
+      <line class="l" x1="160" y1="54"  x2="160" y2="76"  marker-end="url(#mD)"/><text class="tl s" x="168" y="69">yes</text>
+      <line class="l" x1="160" y1="122" x2="160" y2="144" marker-end="url(#mD)"/><text class="tl s" x="168" y="137">yes</text>
+      <line class="l" x1="160" y1="190" x2="160" y2="212" marker-end="url(#mD)"/><text class="tl s" x="168" y="205">yes</text>
+      <line class="l" x1="160" y1="258" x2="160" y2="280" marker-end="url(#mD)"/><text class="tl s" x="168" y="273">no</text>
+
+      <line class="lw" x1="310" y1="32"  x2="418" y2="32"  marker-end="url(#mD)"/><text class="t s" x="364" y="24">no</text>
+      <rect class="w" x="420" y="12" width="170" height="40" rx="20"/><text class="t tw" x="505" y="37">UNSUPPORTED</text>
+      <line class="lw" x1="310" y1="100" x2="418" y2="100" marker-end="url(#mD)"/><text class="t s" x="364" y="92">no</text>
+      <rect class="w" x="420" y="80" width="170" height="40" rx="20"/><text class="t tw" x="505" y="105">UNSUPPORTED</text>
+
+      <line class="l" x1="310" y1="168" x2="418" y2="168" marker-end="url(#mD)"/><text class="t s" x="364" y="160">no (JavaScript page)</text>
+      <rect class="b" x="420" y="134" width="390" height="68" rx="8"/>
+      <text class="tl h" x="434" y="156">Search Google snippets of that page</text>
+      <text class="tl s" x="434" y="175">figure near the quote's words → <tspan class="ta">VERIFIED-SNIPPET</tspan></text>
+      <text class="tl s" x="434" y="192">otherwise → <tspan class="tw">UNVERIFIABLE</tspan></text>
+
+      <line class="la" x1="310" y1="236" x2="418" y2="236" marker-end="url(#mD)"/><text class="t s" x="364" y="228">yes</text>
+      <rect class="a" x="420" y="216" width="170" height="40" rx="20"/><text class="t ta" x="505" y="241">VERIFIED</text>
+      <line class="la" x1="310" y1="304" x2="418" y2="304" marker-end="url(#mD)"/><text class="t s" x="364" y="296">yes</text>
+      <rect class="a" x="420" y="284" width="170" height="40" rx="20"/><text class="t ta" x="505" y="309">VERIFIED-APPROX</text>
+
+      <line class="lw" x1="160" y1="326" x2="160" y2="346" marker-end="url(#mD)"/><text class="tl s" x="168" y="342">no</text>
+      <rect class="w" x="75" y="348" width="170" height="38" rx="19"/><text class="t tw" x="160" y="372">MISMATCH</text>
+    </svg>
+    </div>
+    <figcaption>A price is only trusted when its own quote contains the figure and the quote is found where it was claimed. Pages that need
+    JavaScript (Swiggy, Zomato) cannot be read directly, so a Google snippet of that exact page is the fallback, tagged <code>[verified via search snippet]</code>.</figcaption>
+  </figure>
+
+  <div class="tablewrap"><table>
+    <tr><th>Status</th><th>Meaning</th><th>What happens</th></tr>
+    <tr><td><code>verified</code></td><td>Quote found word for word on the page</td><td>Tagged <code>[verified]</code> in the report.</td></tr>
+    <tr><td><code>verified-approx</code></td><td>Most quote words and the price figure are on the page</td><td>Accepted as verified.</td></tr>
+    <tr><td><code>verified-snippet</code></td><td>Page unreadable; a search snippet shows the figure beside the same words</td><td>Tagged <code>[verified via search snippet]</code>; weaker evidence.</td></tr>
+    <tr><td><code>unverifiable</code></td><td>Page unreadable and no snippet confirms it</td><td>Allowed but tagged <code>[unverifiable - confirm manually]</code> and costs score.</td></tr>
+    <tr><td><code>mismatch</code> / <code>unsupported</code></td><td>The page does not contain the price, or no evidence backs it</td><td>Blocks the research; the agent must re-check or write <em>Not found</em>.</td></tr>
+  </table></div>
+
+  <div class="note"><strong>A repair step in code.</strong> Models often forget to add EVIDENCE lines. <code>autofill_evidence()</code> re-runs the same price tool in code for any
+  priced competitor without one, and keeps a quote only if it contains the table's figure and belongs to that competitor.</div>
+</section>
+
+<!-- ============================================================ 7 -->
+<section id="checks">
+  <h2>7. The quality checks</h2>
+  <p>All checks are small functions in <code>verify.py</code>. Each takes the report text and returns the offenders, so the same function serves
+  the guardrail (to give feedback), the final warnings (to record what is left) and the score (to deduct points).</p>
+  <div class="tablewrap"><table>
+    <tr><th>Check</th><th>Catches</th><th>Why it matters</th></tr>
+    <tr><td>Location names the city</td><td>"Yes, website" or a competitor in another city</td><td>A competitor you cannot reach in the target city is not a competitor.</td></tr>
+    <tr><td>No online shops</td><td>Product pages, Amazon, Flipkart, <code>/collections/</code></td><td>Packaged goods are not meal-delivery businesses.</td></tr>
+    <tr><td>Price per meal, not per pack</td><td>"₹140 per 250 g upma mix"</td><td>A pack price cannot be compared with a meal price.</td></tr>
+    <tr><td>No "for two" or stale prices</td><td>Dine-in costs for two; sources two or more years old</td><td>Prices must be comparable and current.</td></tr>
+    <tr><td>Direct is earned</td><td>A "Direct" competitor whose row never mentions the product</td><td>Stops loosely related businesses being labelled direct.</td></tr>
+    <tr><td>Missed subscriptions</td><td>Evidence mentions a monthly plan but the plan cell says "Not found"</td><td>Keeps the "no one offers a subscription" claim honest.</td></tr>
+    <tr><td>Arithmetic</td><td>"219.50 x 30 = 6,570" recomputed</td><td>Models make arithmetic slips in price logic.</td></tr>
+    <tr><td>Uncheckable claims</td><td>"first", "only", "growing demand"</td><td>Nothing in the evidence can prove these.</td></tr>
+    <tr><td>Absence as fact</td><td>"No competitor offers a subscription"</td><td>Must read "none found in the sources reviewed".</td></tr>
+    <tr><td>Complaints have a real source</td><td>No link, a generic Instagram popular page, or a page for another city</td><td>Added after a test run cited a Hyderabad outlet's reviews for a Coimbatore competitor.</td></tr>
+    <tr><td>Contact consistency</td><td>"No contact found" for a row that has a phone or link</td><td>The report must not contradict itself.</td></tr>
+    <tr><td>Sources complete</td><td>A cited URL missing from section 6; fewer than 3 sources</td><td>Every claim stays traceable.</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ 8 -->
+<section id="score">
+  <h2>8. The quality score</h2>
+  <p>Each run gets a score from 0 to 100 computed only from the automatic checks (no extra AI calls). It starts at 100 and loses points; the app lists every deduction so
+  the number is never a black box. It is used to choose the best of several runs.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Deduction</th><th>Points</th></tr>
+    <tr><td>Each unresolved report problem the guardrails could not fix (first three; the rest together)</td><td>−15</td></tr>
+    <tr><td>Each unresolved deck problem (first two)</td><td>−10</td></tr>
+    <tr><td>Fewer than 3 competitor rows</td><td>−20</td></tr>
+    <tr><td>Fewer than 2 Direct competitors</td><td>−15</td></tr>
+    <tr><td>Fewer than 3 distinct source URLs</td><td>−15</td></tr>
+    <tr><td>Fewer than 2 competitors with a numeric price</td><td>−15</td></tr>
+    <tr><td>Each unverifiable price</td><td>−5</td></tr>
+    <tr><td>A price under 40% of the highest (likely a side item)</td><td>−10</td></tr>
+    <tr><td>A per-weight or per-pack price shown as a meal price</td><td>−10</td></tr>
+    <tr><td>A platform summary sentence presented as a customer quote</td><td>−10</td></tr>
+    <tr><td>Market gap that contradicts a Direct competitor in the table</td><td>−20 (once)</td></tr>
+  </table></div>
+  <div class="caution"><strong>What the score is not.</strong> It cannot tell whether a price on a page is the right price, or whether a review is about the right outlet. A score of 100 means
+  the report passed the structural and consistency checks, not that it is true. A person should still check the prices before relying on them.</div>
+</section>
+
+<!-- ============================================================ 9 -->
+<section id="extras">
+  <h2>9. Stretch goals</h2>
+
+  <h3>9.1 Hierarchical Manager mode <span class="tag opt">experimental</span></h3>
+  <p>In the default sequential process the order is fixed. In hierarchical mode a Project Manager agent decides who does what and checks the work.</p>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 760 296" role="img" aria-label="Left: four agents in a fixed chain. Right: a manager agent delegating to the same four agents and receiving their results.">
+      <defs><marker id="mE" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+
+      <text class="tl h" x="10" y="22">Sequential (default)</text>
+      <rect class="a" x="10" y="40" width="150" height="38" rx="8"/><text class="t" x="85" y="64">Market Researcher</text>
+      <rect class="a" x="10" y="100" width="150" height="38" rx="8"/><text class="t" x="85" y="124">Review Analyst</text>
+      <rect class="a" x="10" y="160" width="150" height="38" rx="8"/><text class="t" x="85" y="184">Strategy Analyst</text>
+      <rect class="a" x="10" y="220" width="150" height="38" rx="8"/><text class="t" x="85" y="244">Report Writer</text>
+      <line class="l" x1="85" y1="78" x2="85" y2="98" marker-end="url(#mE)"/>
+      <line class="l" x1="85" y1="138" x2="85" y2="158" marker-end="url(#mE)"/>
+      <line class="l" x1="85" y1="198" x2="85" y2="218" marker-end="url(#mE)"/>
+      <text class="tl s" x="180" y="64">fixed order</text>
+      <text class="tl s" x="180" y="124">each output feeds the next</text>
+      <text class="tl s" x="180" y="184">guardrails retry inside each agent</text>
+
+      <line class="ld" x1="395" y1="20" x2="395" y2="270" style="stroke:var(--line)"/>
+
+      <text class="tl h" x="420" y="22">Hierarchical (experimental)</text>
+      <rect class="w" x="470" y="40" width="160" height="38" rx="8"/><text class="t" x="550" y="64">Project Manager</text>
+      <line class="l" x1="530" y1="78" x2="530" y2="255"/>
+      <rect class="b" x="565" y="100" width="170" height="34" rx="8"/><text class="t" x="650" y="121">Market Researcher</text>
+      <rect class="b" x="565" y="146" width="170" height="34" rx="8"/><text class="t" x="650" y="167">Review Analyst</text>
+      <rect class="b" x="565" y="192" width="170" height="34" rx="8"/><text class="t" x="650" y="213">Strategy Analyst</text>
+      <rect class="b" x="565" y="238" width="170" height="34" rx="8"/><text class="t" x="650" y="259">Report Writer</text>
+      <line class="l" x1="530" y1="117" x2="563" y2="117" marker-end="url(#mE)"/>
+      <line class="l" x1="530" y1="163" x2="563" y2="163" marker-end="url(#mE)"/>
+      <line class="l" x1="530" y1="209" x2="563" y2="209" marker-end="url(#mE)"/>
+      <line class="l" x1="530" y1="255" x2="563" y2="255" marker-end="url(#mE)"/>
+      <text class="tr s" x="518" y="112">delegates a task,</text>
+      <text class="tr s" x="518" y="128">then reviews the result</text>
+      <text class="tr s" x="518" y="196">order chosen by</text>
+      <text class="tr s" x="518" y="212">the Manager</text>
+      <text class="tl s" x="420" y="284">tested: weaker research, so not the default</text>
+    </svg>
+    </div>
+    <figcaption>Same four specialists, different control: a fixed chain versus a Manager that routes the work. In testing the hierarchical run produced weaker research and once saved the Manager's note as the deck, so
+    sequential stays the default.</figcaption>
+  </figure>
+
+  <h3>9.2 Pitch Deck agent</h3>
+  <p>Ticking the checkbox adds a fifth agent that reads the finished report and writes exactly six slides: <em>The opportunity, Who we compete with, What customers say, The market gap,
+  Our positioning and price, 30-day launch plan</em>. Its guardrail rejects a wrong slide count, more than 5 bullets on a slide, uncheckable claims, absence stated as fact and, importantly,
+  <strong>any number that is not in the report</strong>. The deck is exported to <code>deck.pptx</code>. If the deck still has no slides (this happened once in hierarchical mode), it is rebuilt from the report by a
+  single stand-alone designer agent.</p>
+
+  <h3>9.3 Weekly re-runs with price tracking</h3>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 800 190" role="img" aria-label="Each run saves a price snapshot; the new snapshot is compared with the previous one to produce changes.md, which the app shows in a tab.">
+      <defs><marker id="mF" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+
+      <rect class="b" x="10"  y="30" width="140" height="60" rx="8"/><text class="t h" x="80" y="56">Run</text><text class="t s" x="80" y="74">app or weekly script</text>
+      <rect class="b" x="180" y="30" width="140" height="60" rx="8"/><text class="t h" x="250" y="56">report table</text><text class="t s" x="250" y="74">name · price · tag</text>
+      <rect class="a" x="350" y="30" width="140" height="60" rx="8"/><text class="t h" x="420" y="56">new snapshot</text><text class="t s" x="420" y="74">output/history/*.json</text>
+      <rect class="a" x="520" y="30" width="120" height="60" rx="8"/><text class="t h" x="580" y="56">compare</text><text class="t s" x="580" y="74">diff()</text>
+      <rect class="b" x="670" y="30" width="120" height="60" rx="8"/><text class="t h" x="730" y="56">changes.md</text><text class="t s" x="730" y="74">app tab</text>
+
+      <rect class="b" x="520" y="125" width="120" height="50" rx="8"/><text class="t h" x="580" y="148">previous</text><text class="t s" x="580" y="164">snapshot</text>
+
+      <line class="l" x1="150" y1="60" x2="178" y2="60" marker-end="url(#mF)"/>
+      <line class="l" x1="320" y1="60" x2="348" y2="60" marker-end="url(#mF)"/>
+      <line class="l" x1="490" y1="60" x2="518" y2="60" marker-end="url(#mF)"/>
+      <line class="l" x1="640" y1="60" x2="668" y2="60" marker-end="url(#mF)"/>
+      <line class="l" x1="580" y1="125" x2="580" y2="92" marker-end="url(#mF)"/><text class="tl s" x="588" y="114">same idea + city</text>
+      <text class="tr s" x="500" y="154">price moved · new competitor · dropped · price now found / no longer found</text>
+    </svg>
+    </div>
+    <figcaption>Snapshots are grouped by idea and city, so a run is only ever compared with an earlier run of the same market. <code>weekly_rerun.py</code> exists so Windows Task Scheduler can start the run on a weekly trigger.</figcaption>
+  </figure>
+  <div class="caution">Search results change from run to run, so a competitor appearing or disappearing is not always a market change. The changes file says so.</div>
+
+  <h3>9.4 Best of N runs</h3>
+  <p>The <em>Runs</em> setting (1 to 3) runs the whole crew several times, scores each run and keeps the best. Every run is archived under <code>output/runs/</code> and <code>best_of.md</code> lists all scores.
+  This exists because one run's quality varies with what the search returns.</p>
+</section>
+
+<!-- ============================================================ 10 -->
+<section id="app">
+  <h2>10. The Streamlit app</h2>
+  <ul>
+    <li><strong>Form.</strong> Pre-filled with the sample idea so it can be tried with one click. Widget values are only sent when the submit button is pressed.</li>
+    <li><strong>Live status.</strong> One badge per agent shows waiting, working or finished, with the last 25 steps in a log underneath. A badge moves on when that agent's task callback fires.</li>
+    <li><strong>Results survive reruns.</strong> Streamlit re-executes the script on every click, so the report, score and deck are kept in <code>st.session_state</code>. The PDF is built once per report, not once per click.</li>
+    <li><strong>Warnings are visible.</strong> Problems the crew could not fix appear above the report so nobody shares it unaware.</li>
+    <li><strong>Saved run on load.</strong> A fresh page shows the last saved run from <code>output/</code>, so downloads work without a paid run.</li>
+    <li><strong>PDF note.</strong> The built-in PDF font has no rupee sign, so the PDF writes "Rs " instead of ₹.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ 11 -->
+<section id="files">
+  <h2>11. Files and outputs</h2>
+  <div class="tablewrap"><table>
+    <tr><th>File</th><th>Role</th></tr>
+    <tr><td><code>app.py</code></td><td>Streamlit UI: form, live badges, tabs, downloads.</td></tr>
+    <tr><td><code>crew.py</code></td><td>Agents, tasks, guardrails; <code>run_crew</code>, <code>run_best_of</code>, run archiving.</td></tr>
+    <tr><td><code>tools.py</code></td><td><code>PriceFinderTool</code>: real price quotes as EVIDENCE lines.</td></tr>
+    <tr><td><code>verify.py</code></td><td>Price verification and every report-quality check.</td></tr>
+    <tr><td><code>scoring.py</code></td><td>The 0 to 100 quality score and its breakdown.</td></tr>
+    <tr><td><code>deck.py</code></td><td>Deck parsing, guardrail, validation and PowerPoint export.</td></tr>
+    <tr><td><code>history.py</code></td><td>Price snapshots and the "changes since last run" diff.</td></tr>
+    <tr><td><code>weekly_rerun.py</code></td><td>Command-line entry point for scheduled runs.</td></tr>
+    <tr><td><code>README.md</code>, <code>ARTEFACTS.html</code></td><td>Setup guide and this solution walk-through.</td></tr>
+  </table></div>
+
+  <div class="tablewrap"><table>
+    <tr><th>Output</th><th>Content</th></tr>
+    <tr><td><code>output/report.md</code></td><td>The final six-section report.</td></tr>
+    <tr><td><code>output/deck.md</code>, <code>deck.pptx</code></td><td>The pitch deck, when requested.</td></tr>
+    <tr><td><code>output/report_warnings.txt</code>, <code>deck_warnings.txt</code></td><td>What the guardrails could not fix.</td></tr>
+    <tr><td><code>output/score.json</code>, <code>best_of.md</code></td><td>The score with reasons; the table of runs.</td></tr>
+    <tr><td><code>output/changes.md</code>, <code>history/</code></td><td>Changes since the last run; one snapshot per run.</td></tr>
+    <tr><td><code>output/run.log</code>, <code>runs/</code></td><td>Every agent step of the last run; a full copy of every run.</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ 12 -->
+<section id="results">
+  <h2>12. Results and honest limits</h2>
+  <p>The sample used throughout was <em>"Healthy millet meal boxes delivered for lunch"</em> in <em>Coimbatore</em>, for <em>"Office workers, age 25 to 40"</em>.</p>
+
+  <h3>What the test runs showed</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Run</th><th>Competitors</th><th>Score</th><th>What went wrong or right</th></tr>
+    <tr><td>Early live runs</td><td>2 to 4</td><td>varied</td><td>Exposed invented data (invalid search key), a missing evidence step and a report overwritten by the agent's closing chat line. Each led to a fix.</td></tr>
+    <tr><td>Run with deck (kept as run 2)</td><td>2</td><td>45</td><td>Only two competitors; an uncheckable "Coimbatore's first" claim.</td></tr>
+    <tr><td>Fresh run with deck</td><td>4</td><td>75</td><td>Included a packaged-food product (priced per 250 g) as a competitor, and an unsourced Instagram complaint.</td></tr>
+    <tr><td>Fresh run after new checks</td><td>2</td><td>50</td><td>The only complaint cited an outlet in Hyderabad, not Coimbatore. Led to the wrong-city check.</td></tr>
+    <tr><td>Hand-edited version</td><td>3</td><td>100</td><td>The 75 run with the packaged product and the unsourced complaint removed by hand.</td></tr>
+  </table></div>
+  <div class="caution"><strong>Read this before relying on the sample.</strong> The kept report and deck are the hand-edited version, and the 100 comes from the automatic checks only. The report still states the missing subscription
+  gap flatly in section 3, and "Price conflicts: None" is not independently checked. Mummy's Cloud Kitchen's ₹180 was confirmed on its own page; Millet Express's ₹279 comes from a search snippet.</div>
+
+  <h3>Known limits</h3>
+  <ul>
+    <li><strong>Search varies.</strong> Google returns different pages from run to run, so the competitor list and reviews change. Thinly covered local markets can end with fewer than 3 competitors; the report then says so.</li>
+    <li><strong>The checks look at structure, not relevance.</strong> They cannot know whether a review is truly about the right outlet; a person should read the report before sharing it.</li>
+    <li><strong>JavaScript sites</strong> cannot be read directly, so their prices rest on search snippets that may be out of date.</li>
+    <li><strong>Cost.</strong> Each run uses Serper credits and OpenAI tokens; extra runs multiply that. During testing the Serper account ran out of credits, which stops new runs (the saved results stay available).</li>
+    <li><strong>The last checks</strong> (wrong-city and unsourced-complaint) and the deck rebuild were tested on saved reports, not yet in a further live run.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ 13 -->
+<section id="checklist">
+  <h2>13. Done checklist</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Requirement</th><th>Status</th><th>Where</th></tr>
+    <tr><td>4 distinct agents</td><td>Done</td><td><code>build_crew()</code> in <code>crew.py</code></td></tr>
+    <tr><td>Tasks with <code>expected_output</code></td><td>Done</td><td>Every <code>Task</code> in <code>crew.py</code></td></tr>
+    <tr><td>3+ competitors, each with a price and a source link</td><td>Met in the saved report; live runs vary</td><td><code>output/report.md</code>; guardrail 1</td></tr>
+    <tr><td>All 6 sections saved to a file</td><td>Done</td><td><code>output/report.md</code></td></tr>
+    <tr><td>App shows which agent is working</td><td>Done</td><td>Live badges in <code>app.py</code></td></tr>
+    <tr><td>Works for a different idea and city</td><td>Done, tested earlier in the project</td><td>Form inputs only; no code changes</td></tr>
+    <tr><td>Markdown and PDF download</td><td>Done</td><td>Report tab</td></tr>
+    <tr><td>Stretch: hierarchical Manager</td><td>Done (experimental)</td><td>Checkbox / <code>--hierarchical</code></td></tr>
+    <tr><td>Stretch: Pitch Deck agent, 6 slides</td><td>Done</td><td>Checkbox / <code>--deck</code>; <code>deck.py</code></td></tr>
+    <tr><td>Stretch: weekly re-runs and price changes</td><td>Done</td><td><code>weekly_rerun.py</code>, <code>history.py</code></td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ 14 -->
+<section id="run">
+  <h2>14. How to run it</h2>
+  <pre><code>python -m venv .venv
+.venv\Scripts\activate            # or call the programs directly (see below)
+pip install -r requirements.txt
+copy .env.example .env            # add SERPER_API_KEY, OPENAI_API_KEY, LLM_MODEL
+.venv\Scripts\streamlit.exe run app.py</code></pre>
+  <p>Open the address Streamlit prints (usually <code>http://localhost:8501</code>), fill in the form and press <em>Run research crew</em>.</p>
+  <p>For a scheduled weekly run:</p>
+  <pre><code>.venv\Scripts\python.exe weekly_rerun.py --idea "Healthy millet meal boxes delivered for lunch" ^
+    --city Coimbatore --customer "Office workers, age 25 to 40" --deck</code></pre>
+  <div class="note"><strong>If a run fails at once</strong> with "Web search (Serper) is not working", check the Serper account first. "Not enough credits" means the account is empty, and credits belong to the
+  account, so a new key for the same account does not help.</div>
+</section>
+
+<footer>
+  LaunchScout solution guide · every diagram on this page is drawn as inline SVG and uses only the facts described above.
+</footer>
+</div>
+</body>
+</html>
