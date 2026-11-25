@@ -1,0 +1,11 @@
+# secrets and local environment
+.env
+.venv/
+__pycache__/
+*.pyc
+
+# run artefacts: keep only the final sample report and deck
+output/*
+!output/report.md
+!output/deck.md
+!output/deck.pptx

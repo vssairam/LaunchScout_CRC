@@ -1,0 +1,7 @@
+crewai
+crewai-tools
+streamlit
+markdown
+xhtml2pdf
+python-dotenv
+python-pptx
