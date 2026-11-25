@@ -7,6 +7,9 @@ source link, and the prices are checked automatically against the pages they cam
 
 It works for **any idea and any city** through a form in a web app. No code changes are needed.
 
+> **Solution guide with diagrams:** [`ARTEFACTS.html`](ARTEFACTS.html). When GitHub Pages is on, it is published at
+> https://vssairam.github.io/LaunchScout_CRC/
+>
 > Sample run used while building it: *"Healthy millet meal boxes delivered for lunch"* in *Coimbatore*, for
 > *"Office workers, age 25 to 40"*. A sample result is in `output/report.md`, `output/deck.md` and `output/deck.pptx`.
 
